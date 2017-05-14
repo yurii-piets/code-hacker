@@ -41,7 +41,7 @@ void loop() {
   for(int i = 0; i < DISPLAY_SIZE; ++i){
     char *randomArray = "--------";
     
-    leds |= (int) pow(2, i);    
+    leds |= (int) pow(2, i - 1);    
     module.setLEDs(leds);
     
     while(randomArray[i] != code[i]){
@@ -57,7 +57,8 @@ void loop() {
       listenKeys();
     }
   }
-  //currentState = FINISHED;
+  currentState = FINISHED;
+  listenKeys();
 }
 
 void listenKeys(){
@@ -74,6 +75,10 @@ void listenKeys(){
         default:
           break;
       }
+    }else if (keys == 2){
+      if(currentState == FINISHED){
+        currentState = IN_PROGRESS;
+      }
     }
   
     switch(currentState){
@@ -82,9 +87,11 @@ void listenKeys(){
       case WAITING:
         delay(50);
         break;
+      case FINISHED:
+        delay(50);
+        break;
       default:
         break;
     }
-    
   }while(1);
 }
