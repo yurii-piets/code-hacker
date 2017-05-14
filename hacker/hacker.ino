@@ -29,21 +29,26 @@ char* getRandomArray(){
 //A b C d E F
 void loop() {
   char display[DISPLAY_SIZE];
-  char code[DISPLAY_SIZE] = "bd0A16F7";
+  char code[DISPLAY_SIZE] = "b10A16F7";
+  int leds = 0;
   
   for(int i = 0; i < DISPLAY_SIZE; ++i){
-    char *randomArray = "constant";
+    char *randomArray = "--------";
+    
+    leds |= (int) pow(2, i);    
+    module.setLEDs(leds);
+    
     while(randomArray[i] != code[i]){
       randomArray = getRandomArray();
       
       for(int j = 0; j < DISPLAY_SIZE; ++j){
         display[j] = j < i ? code[j] : randomArray[j];
       }
-      
+
       module.setDisplayToString(display);
       delay(50);
     }
   }
-
+  
   delay(10000);
 }
