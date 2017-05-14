@@ -5,10 +5,16 @@ const int strobe = 7;
 const int clock = 9;
 const int data = 8;
 
+TM1638 module(data, clock, strobe);
 const int DISPLAY_SIZE = 9;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'}; 
 
-TM1638 module(data, clock, strobe);
+
+const int WAITING = 0;
+const int IN_PROGRESS = 1;
+const int FINISHED = 2;
+
+int currentState = IN_PROGRESS;
 
 void setup() {
   Serial.begin(9600);
@@ -44,11 +50,41 @@ void loop() {
       for(int j = 0; j < DISPLAY_SIZE; ++j){
         display[j] = j < i ? code[j] : randomArray[j];
       }
-
       module.setDisplayToString(display);
-      delay(50);
+      currentState = IN_PROGRESS;
+      listenKeys();
+      delay(100);
+      listenKeys();
     }
   }
+  //currentState = FINISHED;
+}
+
+void listenKeys(){
+  do{
+    int keys = module.getButtons();
+    if(keys == 1){
+      switch(currentState){
+        case IN_PROGRESS:
+          currentState = WAITING;
+          break;
+        case WAITING:
+          currentState = IN_PROGRESS;
+          break;
+        default:
+          break;
+      }
+    }
   
-  delay(10000);
+    switch(currentState){
+      case IN_PROGRESS:
+        return;
+      case WAITING:
+        delay(50);
+        break;
+      default:
+        break;
+    }
+    
+  }while(1);
 }
