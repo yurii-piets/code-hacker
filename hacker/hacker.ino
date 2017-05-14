@@ -32,7 +32,20 @@ char* getRandomArray(){
   return current;
 }
 
-//A b C d E F
+int pow2(int p){ 
+  if(p < 0){
+    return;
+  }
+  int result = 1;
+  
+  for(int i = 1; i <= p ; ++i){
+    result *=2;
+  }
+
+  return result;
+}
+ 
+
 void loop() {
   char display[DISPLAY_SIZE];
   char code[DISPLAY_SIZE] = "b10A16F7";
@@ -41,7 +54,6 @@ void loop() {
   for(int i = 0; i < DISPLAY_SIZE; ++i){
     char *randomArray = "--------";
     
-    leds |= (int) pow(2, i - 1);    
     module.setLEDs(leds);
     
     while(randomArray[i] != code[i]){
@@ -56,6 +68,7 @@ void loop() {
       delay(100);
       listenKeys();
     }
+    leds |= (int) pow2(i);    
   }
   currentState = FINISHED;
   listenKeys();
