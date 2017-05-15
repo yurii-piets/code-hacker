@@ -1,7 +1,7 @@
 #include <TM1638.h>
 
-//char CODE[] = "3AE61Cb1";
-char CODE[] = "0AbCdEF1";
+char CODE[] = "3AE61Cb1";
+//char CODE[] = "0AbCdEF1";
 int DISP = 100;
 int TIMES = 0;
 
@@ -11,7 +11,6 @@ const int clock = 9;
 const int data = 8;
 
 const int DISPLAY_SIZE = 8;
-const int STEP_DISP = 10;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'};
 
 TM1638 module(data, clock, strobe);
@@ -45,26 +44,32 @@ void loop() {
   int state = IN_PROGRESS;
   
   for(int i = 0; i < DISPLAY_SIZE; ++i){    
+    
     char *randomArray = getRandomArray();
-    while(randomArray[i] != CODE[i]){
-      free(randomArray);
-      randomArray = getRandomArray();
 
+    do{
+      free(randomArray);      
+      
+      randomArray = getRandomArray();
       for(int j = 0; j < DISPLAY_SIZE; ++j){
           display[j] = j < i ? CODE[j] : randomArray[j];
       }
       
       module.setDisplayToString(display);
-      delay(DISP);
-      
       state = IN_PROGRESS;
       handleClick(&state);
+      
+      state = IN_PROGRESS;
       readInput(&state);
+
+      delay(DISP);
       if(state == RESET){
+        free(display);
+        free(randomArray);
         return;
       }
-    }
-
+    } while(randomArray[i] != CODE[i]);
+    
     leds |= pow2(i);    
     module.setLEDs(leds);
     free(randomArray);
@@ -95,21 +100,27 @@ void handleClick(int *state){
       *state = WAITING;
     }
   }
-
+  
   switch(*state){
     case IN_PROGRESS:
       break;
     case WAITING:
+      Serial.println("in");
       for(int key = 0; key != 1; key = module.getButtons()){
         delay(200);
       }
       *state = IN_PROGRESS;
+      Serial.println("out");
       break;
     case FINISHED:
-      Serial.println("finished");
-      for(int key = 0; /*!initCode() ||*/ key != 2; key = module.getButtons());
+      for(int key = 0; /*!initCode() ||*/ key != 2; key = module.getButtons()){
+        readInput(state);
+        delay(100);
+        if(*state == RESET){
+          break;
+        }
+      }
       *state = IN_PROGRESS;
-      Serial.println(*state);
       break;
     default:
       Serial.println("Strange program state");
