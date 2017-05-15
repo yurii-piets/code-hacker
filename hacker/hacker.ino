@@ -1,7 +1,7 @@
 #include <TM1638.h>
 
-char CODE[] = "3E6F5678";
-int DISP = 10;
+char CODE[] = "3AE61Cb";
+int DISP = 100;
 int TIMES = 0;
 
 // Ustawienia pinów
@@ -9,7 +9,7 @@ const int strobe = 7;
 const int clock = 9;
 const int data = 8;
 
-const int DISPLAY_SIZE = 9;
+const int DISPLAY_SIZE = 8;
 const int STEP_DISP = 10;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'};
 
@@ -35,19 +35,19 @@ void setup() {
 }
 
 void loop() {
-  char *disp = (char *) malloc(DISPLAY_SIZE);
+  char *disp = (char *) malloc(DISPLAY_SIZE + 1);
   int leds = 0;
   module.clearDisplay();
   module.setLEDs(leds);
   state = IN_PROGRESS;
   
-  for(int i = 0; i < DISPLAY_SIZE-1; ++i){    
+  for(int i = 0; i < DISPLAY_SIZE; ++i){    
     char *randomArray = getRandomArray();
     while(randomArray[i] != CODE[i]){
       free(randomArray);
       randomArray = getRandomArray();
 
-      for(int j = 0; j < DISPLAY_SIZE-1; ++j){
+      for(int j = 0; j < DISPLAY_SIZE; ++j){
          disp[j] = j < i ? CODE[j] : randomArray[j];
       }
       
@@ -136,7 +136,7 @@ void readInput(){
 }
 
 void initCode(){
-  char newCode[DISPLAY_SIZE] = "\0";
+  char newCode[DISPLAY_SIZE+1] = "\0";
   for(int i = 0; i < 8 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(isAllowed(rc)){
@@ -191,20 +191,8 @@ boolean isAllowed(char value){
   return false;
 }
 
-void flush(){
-  while(Serial.available() > 0){
-    Serial.read();
-  }  
-}
-
-void step_delay(){
-  for(int k = 0; k < DISP; k += STEP_DISP){        
-    delay(STEP_DISP);
-  }
-}
-
 char* getRandomArray(){
-  char *current = (char *) malloc(DISPLAY_SIZE);
+  char *current = (char *) malloc(DISPLAY_SIZE+1);
 
   for(int i=0; i < DISPLAY_SIZE; ++i){
     int randomValue = random(0, 16);
