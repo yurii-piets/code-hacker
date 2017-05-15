@@ -2,6 +2,7 @@
 
 char CODE[] = "3E6F5678";
 int DISP = 10;
+int TIMES = 0;
 
 // Ustawienia pinów
 const int strobe = 7;
@@ -114,7 +115,7 @@ void readInput(){
       case 'N':
         Serial.println("N command");
         if(Serial.available() > 1){
-          Serial.println("Right");
+          initTimes();
         } else {
           Serial.println("Wrong format of command");
         }
@@ -122,7 +123,7 @@ void readInput(){
       case 'D':
         Serial.println("D command");
         if(Serial.available() > 1){
-          Serial.println("Right");
+          initDisp();
         } else {
           Serial.println("Wrong format of command");
         }
@@ -141,12 +142,44 @@ void initCode(){
     if(isAllowed(rc)){
       newCode[i] = rc;
     }else{
-      Serial.print("Occured character: ");Serial.println(rc);
+      Serial.print("Occured wrong value: ");Serial.println(rc);
       return;
     }
   }
   memcpy(CODE, newCode, 8);
   Serial.println(CODE);
+}
+
+void initTimes(){
+  char newTimes[4] = "\0";
+  for(int i = 0; i < 3 && Serial.available() > 0; ++i){
+    char rc = Serial.read();
+    if(rc >= '0' && rc <= 'rc'){
+      newTimes[i] = rc;
+    }else{
+      Serial.print("Occured wrong value: ");Serial.println(rc);
+      return;
+    }
+  }  
+  int tmp;
+  sscanf(newTimes, "%d", &TIMES);
+  Serial.println(TIMES);
+}
+
+void initDisp(){
+  char newTimes[5] = "\0";
+  for(int i = 0; i < 5 && Serial.available() > 0; ++i){
+    char rc = Serial.read();
+    if(rc >= '0' && rc <= 'rc'){
+      newTimes[i] = rc;
+    }else{
+      Serial.print("Occured wrong value: ");Serial.println(rc);
+      return;
+    }
+  }  
+  int tmp;
+  sscanf(newTimes, "%d", &DISP);
+  Serial.println(DISP);
 }
 
 boolean isAllowed(char value){
