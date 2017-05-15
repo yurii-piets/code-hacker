@@ -16,20 +16,21 @@ const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C'
 
 TM1638 module(data, clock, strobe);
 
-//Trzy możliwe stany programu
+//Cztery możliwe stany programu
 const int IN_PROGRESS = 0;
 const int WAITING = 1;
 const int FINISHED = 2; 
+const int RESET = 3;
 
 //Definicje funkcji
 char* getRandomArray();
 void handleClick(int *);
 int pow2(int);
 boolean isAllowed(char);
-void readInput();
-void initCode();
-void initDisp();
-void initTimes();
+void readInput(int *);
+boolean initCode();
+boolean initDisp();
+boolean initTimes();
 
 void setup() {
   Serial.begin(9600);
@@ -58,9 +59,13 @@ void loop() {
       
       state = IN_PROGRESS;
       handleClick(&state);
+      readInput(&state);
+      if(state == RESET){
+        return;
+      }
     }
 
-    leds |= (int) pow2(i);    
+    leds |= pow2(i);    
     module.setLEDs(leds);
     free(randomArray);
   }
@@ -69,7 +74,7 @@ void loop() {
   
   state = FINISHED;
   handleClick(&state);
-  readInput(); 
+  readInput(&state); 
 }
 
 char* getRandomArray(){
@@ -101,8 +106,10 @@ void handleClick(int *state){
       *state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; key != 2; key = module.getButtons());
+      Serial.println("finished");
+      for(int key = 0; /*!initCode() ||*/ key != 2; key = module.getButtons());
       *state = IN_PROGRESS;
+      Serial.println(*state);
       break;
     default:
       Serial.println("Strange program state");
@@ -112,14 +119,17 @@ void handleClick(int *state){
 }
 
 
-void readInput(){
+void readInput(int *state){
   while(Serial.available() > 0){
     char rc = Serial.read();
     switch(rc){
       case 'C':
         Serial.println("C command");
         if(Serial.available() > 0) {
-          initCode();
+          boolean newState = initCode();
+          if(newState){
+            *state = RESET;
+          }
         } else {
           Serial.println("Wrong format of command");
         }
@@ -141,13 +151,13 @@ void readInput(){
         }
         break;
       default:
-        Serial.print("Wrong command");Serial.println(rc);
+        Serial.print("Wrong command: ");Serial.println(rc);
         break;
     }
   }
 }
 
-void initCode(){
+boolean initCode(){
   char newCode[DISPLAY_SIZE+1] = "\0";
   for(int i = 0; i < 8 && Serial.available() > 0; ++i){
     char rc = Serial.read();
@@ -155,14 +165,15 @@ void initCode(){
       newCode[i] = rc;
     } else {
       Serial.print("Occured wrong value: "); Serial.println(rc);
-      return;
+      return false;
     }
   }
   memcpy(CODE, newCode, 8);
   Serial.println(CODE);
+  return true;
 }
 
-void initTimes(){
+boolean initTimes(){
   char newTimes[4] = "\0";
   for(int i = 0; i < 3 && Serial.available() > 0; ++i){
     char rc = Serial.read();
@@ -170,14 +181,15 @@ void initTimes(){
       newTimes[i] = rc;
     } else {
       Serial.print("Occured wrong value: "); Serial.println(rc);
-      return;
+      return false;
     }
   }  
   sscanf(newTimes, "%d", &TIMES);
   Serial.println(TIMES);
+  return true;
 }
 
-void initDisp(){
+boolean initDisp(){
   char newTimes[5] = "\0";
   for(int i = 0; i < 5 && Serial.available() > 0; ++i){
     char rc = Serial.read();
@@ -185,11 +197,12 @@ void initDisp(){
       newTimes[i] = rc;
     } else {
       Serial.print("Occured wrong value: "); Serial.println(rc);
-      return;
+      return false;
     }
   }
   sscanf(newTimes, "%d", &DISP);
   Serial.println(DISP);
+  return true;
 }
 
 boolean isAllowed(char value){
