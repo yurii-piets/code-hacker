@@ -1,6 +1,7 @@
 #include <TM1638.h>
 
-char CODE[] = "3AE61Cb";
+//char CODE[] = "3AE61Cb1";
+char CODE[] = "0AbCdEF1";
 int DISP = 100;
 int TIMES = 0;
 
@@ -20,14 +21,15 @@ const int IN_PROGRESS = 0;
 const int WAITING = 1;
 const int FINISHED = 2; 
 
-int state;
-
 //Definicje funkcji
 char* getRandomArray();
+void handleClick(int *);
 int pow2(int);
-void step_delay();
-void handleClick();
-
+boolean isAllowed(char);
+void readInput();
+void initCode();
+void initDisp();
+void initTimes();
 
 void setup() {
   Serial.begin(9600);
@@ -35,11 +37,11 @@ void setup() {
 }
 
 void loop() {
-  char *disp = (char *) malloc(DISPLAY_SIZE + 1);
+  char *display = (char *) malloc(DISPLAY_SIZE + 1);
   int leds = 0;
   module.clearDisplay();
   module.setLEDs(leds);
-  state = IN_PROGRESS;
+  int state = IN_PROGRESS;
   
   for(int i = 0; i < DISPLAY_SIZE; ++i){    
     char *randomArray = getRandomArray();
@@ -48,15 +50,14 @@ void loop() {
       randomArray = getRandomArray();
 
       for(int j = 0; j < DISPLAY_SIZE; ++j){
-         disp[j] = j < i ? CODE[j] : randomArray[j];
+          display[j] = j < i ? CODE[j] : randomArray[j];
       }
       
-      module.setDisplayToString(disp);
-      //step_delay();
+      module.setDisplayToString(display);
       delay(DISP);
       
       state = IN_PROGRESS;
-      handleClick();
+      handleClick(&state);
     }
 
     leds |= (int) pow2(i);    
@@ -64,37 +65,48 @@ void loop() {
     free(randomArray);
   }
   
-  free(disp);
+  free(display);
   
   state = FINISHED;
-  handleClick();
+  handleClick(&state);
   readInput(); 
 }
 
-void handleClick(){
-  if(state == IN_PROGRESS){
+char* getRandomArray(){
+  char *current = (char *) malloc(DISPLAY_SIZE+1);
+
+  for(int i=0; i < DISPLAY_SIZE; ++i){
+    int randomValue = random(0, 16);
+    current[i] = allowedChars[randomValue];
+  }
+  
+  return current;
+}
+
+void handleClick(int *state){
+  if (*state == IN_PROGRESS) {
     int keys = module.getButtons();
-    if (keys == 1){
-      state = WAITING;
+    if (keys == 1) {
+      *state = WAITING;
     }
   }
 
-  switch(state){
+  switch(*state){
     case IN_PROGRESS:
       break;
     case WAITING:
       for(int key = 0; key != 1; key = module.getButtons()){
         delay(200);
       }
-      state = IN_PROGRESS;
+      *state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; key != 2; key = module.getButtons()){}
-      state = IN_PROGRESS;
+      for(int key = 0; key != 2; key = module.getButtons());
+      *state = IN_PROGRESS;
       break;
     default:
       Serial.println("Strange program state");
-      state = IN_PROGRESS;
+      *state = IN_PROGRESS;
       break;
   }
 }
@@ -106,7 +118,7 @@ void readInput(){
     switch(rc){
       case 'C':
         Serial.println("C command");
-        if(Serial.available() > 0){
+        if(Serial.available() > 0) {
           initCode();
         } else {
           Serial.println("Wrong format of command");
@@ -114,7 +126,7 @@ void readInput(){
         break;
       case 'N':
         Serial.println("N command");
-        if(Serial.available() > 0){
+        if(Serial.available() > 0) {
           initTimes();
         } else {
           Serial.println("Wrong format of command");
@@ -122,7 +134,7 @@ void readInput(){
         break;
       case 'D':
         Serial.println("D command");
-        if(Serial.available() > 0){
+        if(Serial.available() > 0) {
           initDisp();
         } else {
           Serial.println("Wrong format of command");
@@ -141,8 +153,8 @@ void initCode(){
     char rc = Serial.read();
     if(isAllowed(rc)){
       newCode[i] = rc;
-    }else{
-      Serial.print("Occured wrong value: ");Serial.println(rc);
+    } else {
+      Serial.print("Occured wrong value: "); Serial.println(rc);
       return;
     }
   }
@@ -154,14 +166,13 @@ void initTimes(){
   char newTimes[4] = "\0";
   for(int i = 0; i < 3 && Serial.available() > 0; ++i){
     char rc = Serial.read();
-    if(rc >= '0' && rc <= 'rc'){
+    if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
-    }else{
-      Serial.print("Occured wrong value: ");Serial.println(rc);
+    } else {
+      Serial.print("Occured wrong value: "); Serial.println(rc);
       return;
     }
   }  
-  int tmp;
   sscanf(newTimes, "%d", &TIMES);
   Serial.println(TIMES);
 }
@@ -170,14 +181,13 @@ void initDisp(){
   char newTimes[5] = "\0";
   for(int i = 0; i < 5 && Serial.available() > 0; ++i){
     char rc = Serial.read();
-    if(rc >= '0' && rc <= 'rc'){
+    if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
-    }else{
-      Serial.print("Occured wrong value: ");Serial.println(rc);
+    } else {
+      Serial.print("Occured wrong value: "); Serial.println(rc);
       return;
     }
-  }  
-  int tmp;
+  }
   sscanf(newTimes, "%d", &DISP);
   Serial.println(DISP);
 }
@@ -191,27 +201,14 @@ boolean isAllowed(char value){
   return false;
 }
 
-char* getRandomArray(){
-  char *current = (char *) malloc(DISPLAY_SIZE+1);
-
-  for(int i=0; i < DISPLAY_SIZE; ++i){
-    int randomValue = random(0, 16);
-    current[i] = allowedChars[randomValue];
-  }
-  
-  return current;
-}
-
 int pow2(int p){ 
   if(p < 0){
     return 0;
   }
   
   int result = 1;
-  
-  for(int i = 0; i < p ; ++i){
-    result *=2;
+  while (p-- > 0) {
+    result *= 2;
   }
-
   return result;
 }
