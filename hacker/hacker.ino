@@ -67,8 +67,8 @@ void loop() {
   free(disp);
   
   state = FINISHED;
-  readInput(); //remove
-  //handleClick(); //uncomment
+  handleClick();
+  readInput(); 
 }
 
 void handleClick(){
@@ -106,7 +106,7 @@ void readInput(){
     switch(rc){
       case 'C':
         Serial.println("C command");
-        if(Serial.available() > 7){
+        if(Serial.available() > 0){
           initCode();
         } else {
           Serial.println("Wrong format of command");
@@ -114,7 +114,7 @@ void readInput(){
         break;
       case 'N':
         Serial.println("N command");
-        if(Serial.available() > 1){
+        if(Serial.available() > 0){
           initTimes();
         } else {
           Serial.println("Wrong format of command");
@@ -122,14 +122,14 @@ void readInput(){
         break;
       case 'D':
         Serial.println("D command");
-        if(Serial.available() > 1){
+        if(Serial.available() > 0){
           initDisp();
         } else {
           Serial.println("Wrong format of command");
         }
         break;
       default:
-        Serial.println("Wrong command");
+        Serial.print("Wrong command");Serial.println(rc);
         break;
     }
   }
