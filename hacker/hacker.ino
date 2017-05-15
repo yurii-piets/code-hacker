@@ -1,8 +1,7 @@
 #include <TM1638.h>
 
-
 char CODE[] = "3E6F5678";
-int DISP = 200;
+int DISP = 100;
 
 // Ustawienia pinów
 const int strobe = 7;
@@ -15,10 +14,18 @@ const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C'
 
 TM1638 module(data, clock, strobe);
 
+//Trzy możliwe stany programu
+const int IN_PROGRESS = 0;
+const int WAITING = 1;
+const int FINISHED = 2; 
+
+int state;
+
 //Definicje funkcji
 char* getRandomArray();
 int pow2(int);
 void step_delay();
+void handleClick();
 
 
 void setup() {
@@ -29,9 +36,9 @@ void setup() {
 void loop() {
   char *disp = (char *) malloc(DISPLAY_SIZE);
   int leds = 0;
-  Serial.println("hello");
   module.clearDisplay();
   module.setLEDs(leds);
+  state = IN_PROGRESS;
   
   for(int i = 0; i < DISPLAY_SIZE-1; ++i){    
     char *randomArray = getRandomArray();
@@ -44,7 +51,11 @@ void loop() {
       }
       
       module.setDisplayToString(disp);
-      step_delay();
+      //step_delay();
+      delay(DISP);
+      
+      state = IN_PROGRESS;
+      handleClick();
     }
 
     leds |= (int) pow2(i);    
@@ -53,7 +64,37 @@ void loop() {
   }
   
   free(disp);
-  Serial.println("bye");
+  
+  state = FINISHED;
+  handleClick();
+}
+
+void handleClick(){
+  if(state == IN_PROGRESS){
+    int keys = module.getButtons();
+    if (keys == 1){
+      state = WAITING;
+    }
+  }
+
+  switch(state){
+    case IN_PROGRESS:
+      break;
+    case WAITING:
+      for(int key = 0; key != 1; key = module.getButtons()){
+        delay(200);
+      }
+      state = IN_PROGRESS;
+      break;
+    case FINISHED:
+      for(int key = 0; key != 2 ; key = module.getButtons());
+      state = IN_PROGRESS;
+      break;
+    default:
+      Serial.println("Strange program state");
+      state = IN_PROGRESS;
+      break;
+  }
 }
 
 void step_delay(){
