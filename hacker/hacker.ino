@@ -1,7 +1,7 @@
 #include <TM1638.h>
 
 char CODE[] = "3E6F5678";
-int DISP = 100;
+int DISP = 10;
 
 // Ustawienia pinów
 const int strobe = 7;
@@ -66,7 +66,8 @@ void loop() {
   free(disp);
   
   state = FINISHED;
-  handleClick();
+  readInput(); //remove
+  //handleClick(); //uncomment
 }
 
 void handleClick(){
@@ -87,7 +88,7 @@ void handleClick(){
       state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; key != 2 ; key = module.getButtons());
+      for(int key = 0; key != 2; key = module.getButtons()){}
       state = IN_PROGRESS;
       break;
     default:
@@ -95,6 +96,72 @@ void handleClick(){
       state = IN_PROGRESS;
       break;
   }
+}
+
+
+void readInput(){
+  while(Serial.available() > 0){
+    char rc = Serial.read();
+    switch(rc){
+      case 'C':
+        Serial.println("C command");
+        if(Serial.available() > 7){
+          initCode();
+        } else {
+          Serial.println("Wrong format of command");
+        }
+        break;
+      case 'N':
+        Serial.println("N command");
+        if(Serial.available() > 1){
+          Serial.println("Right");
+        } else {
+          Serial.println("Wrong format of command");
+        }
+        break;
+      case 'D':
+        Serial.println("D command");
+        if(Serial.available() > 1){
+          Serial.println("Right");
+        } else {
+          Serial.println("Wrong format of command");
+        }
+        break;
+      default:
+        Serial.println("Wrong command");
+        break;
+    }
+  }
+}
+
+void initCode(){
+  char newCode[DISPLAY_SIZE] = "\0";
+  for(int i = 0; i < 8 && Serial.available() > 0; ++i){
+    char rc = Serial.read();
+    if(isAllowed(rc)){
+      newCode[i] = rc;
+    }else{
+      Serial.print("Occured character: ");Serial.println(rc);
+      return;
+    }
+  }
+  memcpy(CODE, newCode, 8);
+  Serial.println(CODE);
+}
+
+boolean isAllowed(char value){
+  for(int i = 0 ; i < 16; ++i){
+    if(allowedChars[i] == value){
+      return true;
+    }
+  }
+  return false;
+}
+
+void flush(){
+  while(Serial.available() > 0){
+    Serial.read();
+  }  
 }
 
 void step_delay(){
