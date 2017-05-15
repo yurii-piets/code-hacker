@@ -1,9 +1,8 @@
 #include <TM1638.h>
 
 char CODE[] = "3AE61Cb1";
-//char CODE[] = "0AbCdEF1";
 int DISP = 100;
-int TIMES = 0;
+int TIMES = 10;
 
 // Ustawienia pinów
 const int strobe = 7;
@@ -22,7 +21,6 @@ const int FINISHED = 2;
 const int RESET = 3;
 
 //Definicje funkcji
-char* getRandomArray();
 void handleClick(int *);
 int pow2(int);
 boolean isAllowed(char);
@@ -36,61 +34,76 @@ void setup() {
   module.clearDisplay();
 }
 
-void loop() {
+void loop(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
   int leds = 0;
   module.clearDisplay();
   module.setLEDs(leds);
   int state = IN_PROGRESS;
+ 
+  char displayLetter = '0';
   
-  for(int i = 0; i < DISPLAY_SIZE; ++i){    
-    
-    char *randomArray = getRandomArray();
+  for(int i = 0; i < DISPLAY_SIZE; i++) {
+    display[i] = displayLetter;
+  }
 
-    do{
-      free(randomArray);      
+  module.setDisplayToString(display);
+
+  for(int i = 0; i < DISPLAY_SIZE; ++i){
+    for(int j = 0; j < TIMES; ++j){
+      switch(displayLetter){ //next letter to show
+        case '9':
+          displayLetter = 'A';
+          break;
+        case 'A':
+          displayLetter = 'b';
+          break;
+        case 'b':
+          displayLetter = 'C';
+          break;
+        case 'C':
+          displayLetter = 'd';
+          break;
+        case 'd':
+          displayLetter = 'E';
+          break;
+        case 'F':
+          displayLetter = '0';
+          break;
+        default:
+          displayLetter+=1;
+          break;
+      }
       
-      randomArray = getRandomArray();
-      for(int j = 0; j < DISPLAY_SIZE; ++j){
-          display[j] = j < i ? CODE[j] : randomArray[j];
+      for(int k = i; k < DISPLAY_SIZE; ++k){
+        display[k] = displayLetter;
       }
       
       module.setDisplayToString(display);
+
       state = IN_PROGRESS;
       handleClick(&state);
       
       state = IN_PROGRESS;
       readInput(&state);
 
-      delay(DISP);
       if(state == RESET){
         free(display);
-        free(randomArray);
         return;
       }
-    } while(randomArray[i] != CODE[i]);
-    
+      
+      delay(DISP);
+    }
     leds |= pow2(i);    
     module.setLEDs(leds);
-    free(randomArray);
+    display[i] = CODE[i];
+    module.setDisplayToString(display);
   }
-  
   free(display);
-  
+
   state = FINISHED;
   handleClick(&state);
   readInput(&state); 
-}
-
-char* getRandomArray(){
-  char *current = (char *) malloc(DISPLAY_SIZE+1);
-
-  for(int i=0; i < DISPLAY_SIZE; ++i){
-    int randomValue = random(0, 16);
-    current[i] = allowedChars[randomValue];
-  }
-  
-  return current;
 }
 
 void handleClick(int *state){
@@ -128,7 +141,6 @@ void handleClick(int *state){
       break;
   }
 }
-
 
 void readInput(int *state){
   while(Serial.available() > 0){
