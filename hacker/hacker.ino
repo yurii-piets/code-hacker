@@ -1,8 +1,8 @@
 #include <TM1638.h>
 
 char CODE[] = "3AE61Cb1";
-int DISP = 100;
 int TIMES = 10;
+int DISP = 100;
 
 // Ustawienia pinów
 const int strobe = 7;
@@ -11,23 +11,21 @@ const int data = 8;
 
 const int DISPLAY_SIZE = 8;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'};
+// const char allowedChars[] = "0123456789AbCdEF";
 
 TM1638 module(data, clock, strobe);
 
 //Cztery możliwe stany programu
-const int IN_PROGRESS = 0;
-const int WAITING = 1;
-const int FINISHED = 2; 
-const int RESET = 3;
+typedef enum {IN_PROGRESS, WAITING, FINISHED, RESET} states;
 
 //Definicje funkcji
-void handleClick(int *);
-int pow2(int);
-boolean isAllowed(char);
-void readInput(int *);
+void handleClick(states *);
+void readInput(states *);
 boolean initCode();
-boolean initDisp();
 boolean initTimes();
+boolean initDisp();
+boolean isAllowed(char);
+
 
 void setup() {
   Serial.begin(9600);
@@ -39,62 +37,40 @@ void loop(){
   int leds = 0;
   module.clearDisplay();
   module.setLEDs(leds);
-  int state = IN_PROGRESS;
- 
-  char displayLetter = '0';
-  
+  states state = IN_PROGRESS;
+
+  int charToDisplay = 0;
+
   for(int i = 0; i < DISPLAY_SIZE; i++) {
-    display[i] = displayLetter;
+    display[i] = allowedChars[charToDisplay];
   }
 
   module.setDisplayToString(display);
 
   for(int i = 0; i < DISPLAY_SIZE; ++i){
     for(int j = 0; j < TIMES; ++j){
-      switch(displayLetter){ //next letter to show
-        case '9':
-          displayLetter = 'A';
-          break;
-        case 'A':
-          displayLetter = 'b';
-          break;
-        case 'b':
-          displayLetter = 'C';
-          break;
-        case 'C':
-          displayLetter = 'd';
-          break;
-        case 'd':
-          displayLetter = 'E';
-          break;
-        case 'F':
-          displayLetter = '0';
-          break;
-        default:
-          displayLetter+=1;
-          break;
+      charToDisplay+=1;
+      if(charToDisplay>15) { // zamiast wielkiego switcha
+         charToDisplay = 0;
       }
-      
+
       for(int k = i; k < DISPLAY_SIZE; ++k){
-        display[k] = displayLetter;
+        display[k] = allowedChars[charToDisplay];
       }
-      
+
       module.setDisplayToString(display);
 
-      state = IN_PROGRESS;
       handleClick(&state);
-      
-      state = IN_PROGRESS;
       readInput(&state);
 
       if(state == RESET){
         free(display);
         return;
       }
-      
+      state = IN_PROGRESS;
       delay(DISP);
     }
-    leds |= pow2(i);    
+    leds = (leds << 1) +1; // chyba szybsze
     module.setLEDs(leds);
     display[i] = CODE[i];
     module.setDisplayToString(display);
@@ -103,17 +79,17 @@ void loop(){
 
   state = FINISHED;
   handleClick(&state);
-  readInput(&state); 
+  readInput(&state);
 }
 
-void handleClick(int *state){
+void handleClick(states *state){
   if (*state == IN_PROGRESS) {
     int keys = module.getButtons();
     if (keys == 1) {
       *state = WAITING;
     }
   }
-  
+
   switch(*state){
     case IN_PROGRESS:
       break;
@@ -121,8 +97,11 @@ void handleClick(int *state){
       Serial.println("in");
       for(int key = 0; key != 1; key = module.getButtons()){
         delay(200);
+        if(key == 2) {
+          *state = RESET;
+          break;
+        }
       }
-      *state = IN_PROGRESS;
       Serial.println("out");
       break;
     case FINISHED:
@@ -133,7 +112,6 @@ void handleClick(int *state){
           break;
         }
       }
-      *state = IN_PROGRESS;
       break;
     default:
       Serial.println("Strange program state");
@@ -142,7 +120,7 @@ void handleClick(int *state){
   }
 }
 
-void readInput(int *state){
+void readInput(states *state){
   while(Serial.available() > 0){
     char rc = Serial.read();
     switch(rc){
@@ -206,7 +184,7 @@ boolean initTimes(){
       Serial.print("Occured wrong value: "); Serial.println(rc);
       return false;
     }
-  }  
+  }
   sscanf(newTimes, "%d", &TIMES);
   Serial.println(TIMES);
   return true;
@@ -235,16 +213,4 @@ boolean isAllowed(char value){
     }
   }
   return false;
-}
-
-int pow2(int p){ 
-  if(p < 0){
-    return 0;
-  }
-  
-  int result = 1;
-  while (p-- > 0) {
-    result *= 2;
-  }
-  return result;
 }
