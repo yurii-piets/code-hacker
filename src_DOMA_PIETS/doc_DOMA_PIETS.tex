@@ -1,0 +1,62 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{polski}
+\usepackage[cp1250]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{anysize}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{indentfirst}
+
+\title{Projekt z mikrokontrolerów - sprawozdanie}
+	
+\marginsize{2cm}{2cm}{2cm}{2cm}
+\sloppy
+
+\begin{document}
+	
+\maketitle
+
+\section{Autorstwo}
+\par 1. Temat: £amanie kodu\\ 
+\par 2. Numer grupy: 1b\\
+\par 3. Sk³ad osobowy: Sebastian Domarecki, Yurii Piets\\
+\par 4. Kierunek: informatyka\\
+Rok studiów: II\\
+Rok akademicki: 2016-2017\\
+
+\section{Opis dzia³ania}
+
+\subsection{Schemat po\l{}\k{a}czenia}
+
+\begin{figure}[ht]
+	\centerline{\includegraphics[scale=0.5]{Mikro_bb.png}}
+	\label{fig:schemat}
+\end{figure}
+
+\subsection{Opis algorytmu}
+Schemat dzia³ania algorytmu opiera siê w g³ównej mierze na zredukowanej zewnêtrznej bibliotece TM1638.h udostêpnianej na \href{https://github.com/rjbatista/tm1638-library}{Githubie}. \\
+Program po inicjalizacji ekranu stringiem "00000000", nastêpnie a¿ do zakoñczenia ³amania kodu znajduje siê w pêtli iterowanej po numerze dekodowanej cyfry.\\
+Wewn¹trz niej kolejna pêtla for TIMES razy zmienia wyœwietlane wartoœci niezdekodowanych cyfr na kolejne dozwolone.\\
+Za ka¿d¹ iteracj¹ drugiej pêtli sprawdzane jest czy zosta³ wciœniêty przycisk, b¹dŸ wprowadzona komenda przez port szeregowy.\\
+Po jej opuszczeniu w³¹czany jest kolejny led oraz kopiowana wartoœæ zdekodowanej cyfry z CODE do tablicy display do wyœwietlenia.
+
+\subsection{Elementy programu}
+
+\subsubsection{Zmienne}
+\par CODE,TIMES,DISP - zgodnie z wytycznymi.
+\par module - obiekt klasy TM1638 udostêpniaj¹cy prosty interfejs do obs³ugi p³ytki
+\par state - zmienna typu wyliczeniowego wyœwietlaj¹ca stan programu - dostêpne IN\_PROGRESS, WAITING, FINISHED, RESET
+\subsubsection{Sta³e}
+\par strobe,clock,data - piny Arduino ³¹cz¹ce siê z p³ytk¹ TM1638
+\subsubsection{Funkcje}
+\par void handleClick(states *) - obs³uga przycisków
+\par void readInput(states *) - obs³uga poleceñ z ³¹cza szeregowego
+\par boolean initCode() , initTimes(), initDisp() - wywo³ywane przy readInput dla pierwszego przes³anego znaku odpowiednio C, N lub D, sczytuj¹ z ³¹cza szeregowego now¹ wartoœæ parametru pracy programu
+\par boolean isAllowed(char) - pomocnicza funkcja sprawdzaj¹ca czy argument jest dozwolonym znakiem
+
+\subsection{Biblioteki}
+TM1638.h
+\section{Listing kodu}
+	
+\end{document}

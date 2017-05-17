@@ -35,7 +35,6 @@ void setup() {
 void loop(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
   int leds = 0;
-  module.clearDisplay();
   module.setLEDs(leds);
   states state = IN_PROGRESS;
 
@@ -67,7 +66,6 @@ void loop(){
         free(display);
         return;
       }
-      state = IN_PROGRESS;
       delay(DISP);
     }
     leds = (leds << 1) +1; // chyba szybsze
@@ -79,7 +77,6 @@ void loop(){
 
   state = FINISHED;
   handleClick(&state);
-  readInput(&state);
 }
 
 void handleClick(states *state){
@@ -97,15 +94,12 @@ void handleClick(states *state){
       Serial.println("in");
       for(int key = 0; key != 1; key = module.getButtons()){
         delay(200);
-        if(key == 2) {
-          *state = RESET;
-          break;
-        }
       }
       Serial.println("out");
+      *state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; /*!initCode() ||*/ key != 2; key = module.getButtons()){
+      for(int key = 0; key != 2; key = module.getButtons()){
         readInput(state);
         delay(100);
         if(*state == RESET){
