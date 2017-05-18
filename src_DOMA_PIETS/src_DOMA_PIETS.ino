@@ -1,15 +1,15 @@
 #include <TM1638.h>
 
 char CODE[] = "3AE61Cb1";
-int TIMES = 10;
+byte TIMES = 10;
 int DISP = 100;
 
 // Ustawienia pinów
-const int strobe = 7;
-const int clock = 9;
-const int data = 8;
+const byte strobe = 7;
+const byte clock = 9;
+const byte data = 8;
 
-const int DISPLAY_SIZE = 8;
+const byte DISPLAY_SIZE = 8;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'};
 // const char allowedChars[] = "0123456789AbCdEF";
 
@@ -34,26 +34,26 @@ void setup() {
 
 void loop(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
-  int leds = 0;
+  byte leds = 0;
   module.setLEDs(leds);
   states state = IN_PROGRESS;
 
-  int charToDisplay = 0;
+  byte charToDisplay = 0;
 
-  for(int i = 0; i < DISPLAY_SIZE; i++) {
+  for(byte i = 0; i < DISPLAY_SIZE; i++) {
     display[i] = allowedChars[charToDisplay];
   }
 
   module.setDisplayToString(display);
 
-  for(int i = 0; i < DISPLAY_SIZE; ++i){
-    for(int j = 0; j < TIMES; ++j){
+  for(byte i = 0; i < DISPLAY_SIZE; ++i){
+    for(byte j = 0; j < TIMES; ++j){
       charToDisplay+=1;
       if(charToDisplay>15) { // zamiast wielkiego switcha
          charToDisplay = 0;
       }
 
-      for(int k = i; k < DISPLAY_SIZE; ++k){
+      for(byte k = i; k < DISPLAY_SIZE; ++k){
         display[k] = allowedChars[charToDisplay];
       }
 
@@ -81,7 +81,7 @@ void loop(){
 
 void handleClick(states *state){
   if (*state == IN_PROGRESS) {
-    int keys = module.getButtons();
+    byte keys = module.getButtons();
     if (keys == 1) {
       *state = WAITING;
     }
@@ -92,14 +92,14 @@ void handleClick(states *state){
       break;
     case WAITING:
       Serial.println("in");
-      for(int key = 0; key != 1; key = module.getButtons()){
+      for(byte key = 0; key != 1; key = module.getButtons()){
         delay(200);
       }
       Serial.println("out");
       *state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; key != 2; key = module.getButtons()){
+      for(byte key = 0; key != 2; key = module.getButtons()){
         readInput(state);
         delay(100);
         if(*state == RESET){
@@ -116,6 +116,7 @@ void handleClick(states *state){
 
 void readInput(states *state){
   while(Serial.available() > 0){
+    delay(100);
     char rc = Serial.read();
     switch(rc){
       case 'C':
@@ -146,7 +147,7 @@ void readInput(states *state){
         }
         break;
       default:
-        Serial.print("Wrong command: ");Serial.println(rc);
+        Serial.print("Wrong command: "); Serial.println(rc);
         break;
     }
   }
@@ -154,7 +155,7 @@ void readInput(states *state){
 
 boolean initCode(){
   char newCode[DISPLAY_SIZE+1] = "\0";
-  for(int i = 0; i < 8 && Serial.available() > 0; ++i){
+  for(byte i = 0; i < 8 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(isAllowed(rc)){
       newCode[i] = rc;
@@ -170,7 +171,7 @@ boolean initCode(){
 
 boolean initTimes(){
   char newTimes[4] = "\0";
-  for(int i = 0; i < 3 && Serial.available() > 0; ++i){
+  for(byte i = 0; i < 3 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
@@ -186,7 +187,7 @@ boolean initTimes(){
 
 boolean initDisp(){
   char newTimes[5] = "\0";
-  for(int i = 0; i < 5 && Serial.available() > 0; ++i){
+  for(byte i = 0; i < 5 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
@@ -201,7 +202,7 @@ boolean initDisp(){
 }
 
 boolean isAllowed(char value){
-  for(int i = 0 ; i < 16; ++i){
+  for(byte i = 0 ; i < 16; ++i){
     if(allowedChars[i] == value){
       return true;
     }
