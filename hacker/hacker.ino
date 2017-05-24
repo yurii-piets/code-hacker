@@ -1,49 +1,50 @@
 #include <TM1638.h>
 
-char CODE[] = "3AE61Cb1";
-//char CODE[] = "0AbCdEF1";
+//char CODE[] = "3AE61Cb1";
+String CODE = "3AE61Cb1";
+byte TIMES = 10;
 int DISP = 100;
-int TIMES = 0;
 
 // Ustawienia pinów
-const int strobe = 7;
-const int clock = 9;
-const int data = 8;
+const byte strobe = 7;
+const byte clock = 9;
+const byte data = 8;
 
-const int DISPLAY_SIZE = 8;
+const byte DISPLAY_SIZE = 8;
 const char allowedChars[] = {'0','1','2','3','4','5','6','7','8','9','A','b','C','d','E','F'};
 
 TM1638 module(data, clock, strobe);
 
 //Cztery możliwe stany programu
-const int IN_PROGRESS = 0;
-const int WAITING = 1;
-const int FINISHED = 2; 
-const int RESET = 3;
+typedef enum {IN_PROGRESS, WAITING, FINISHED, RESET} states;
 
 //Definicje funkcji
-char* getRandomArray();
-void handleClick(int *);
-int pow2(int);
-boolean isAllowed(char);
-void readInput(int *);
+void doHack();
+void handleClick(states *);
+void readInput(states *);
 boolean initCode();
-boolean initDisp();
-boolean initTimes();
+void initTimes();
+void initDisp();
+boolean isAllowed(char);
+
 
 void setup() {
   Serial.begin(9600);
   module.clearDisplay();
 }
 
-void loop() {
+void loop(){
+  doHack();
+}
+
+void doHack(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
-  int leds = 0;
+  byte leds = 0;
   module.clearDisplay();
   module.setLEDs(leds);
-  int state = IN_PROGRESS;
+  states state = IN_PROGRESS;
   
-  for(int i = 0; i < DISPLAY_SIZE; ++i){    
+  for(byte i = 0; i < DISPLAY_SIZE; ++i){    
     
     char *randomArray = getRandomArray();
 
@@ -51,7 +52,7 @@ void loop() {
       free(randomArray);      
       
       randomArray = getRandomArray();
-      for(int j = 0; j < DISPLAY_SIZE; ++j){
+      for(byte j = 0; j < DISPLAY_SIZE; ++j){
           display[j] = j < i ? CODE[j] : randomArray[j];
       }
       
@@ -70,7 +71,7 @@ void loop() {
       }
     } while(randomArray[i] != CODE[i]);
     
-    leds |= pow2(i);    
+    leds = (leds << 1) +1;   
     module.setLEDs(leds);
     free(randomArray);
   }
@@ -79,7 +80,7 @@ void loop() {
   
   state = FINISHED;
   handleClick(&state);
-  readInput(&state); 
+  readInput(&state);   
 }
 
 char* getRandomArray(){
@@ -93,34 +94,33 @@ char* getRandomArray(){
   return current;
 }
 
-void handleClick(int *state){
+void handleClick(states *state){
   if (*state == IN_PROGRESS) {
-    int keys = module.getButtons();
+    byte keys = module.getButtons();
     if (keys == 1) {
       *state = WAITING;
     }
   }
-  
+
   switch(*state){
     case IN_PROGRESS:
       break;
     case WAITING:
       Serial.println("in");
-      for(int key = 0; key != 1; key = module.getButtons()){
+      for(byte key = 0; key != 1; key = module.getButtons()){
         delay(200);
       }
-      *state = IN_PROGRESS;
       Serial.println("out");
+      *state = IN_PROGRESS;
       break;
     case FINISHED:
-      for(int key = 0; /*!initCode() ||*/ key != 2; key = module.getButtons()){
+      for(byte key = 0; key != 2; key = module.getButtons()){
         readInput(state);
         delay(100);
         if(*state == RESET){
           break;
         }
       }
-      *state = IN_PROGRESS;
       break;
     default:
       Serial.println("Strange program state");
@@ -129,9 +129,9 @@ void handleClick(int *state){
   }
 }
 
-
-void readInput(int *state){
+void readInput(states *state){
   while(Serial.available() > 0){
+    delay(100);
     char rc = Serial.read();
     switch(rc){
       case 'C':
@@ -162,31 +162,37 @@ void readInput(int *state){
         }
         break;
       default:
-        Serial.print("Wrong command: ");Serial.println(rc);
+        Serial.print("Wrong command: "); Serial.println(rc);
         break;
     }
   }
 }
 
 boolean initCode(){
-  char newCode[DISPLAY_SIZE+1] = "\0";
-  for(int i = 0; i < 8 && Serial.available() > 0; ++i){
+  String newCode = "\0";
+  for(byte i = 0; i < 8 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(isAllowed(rc)){
-      newCode[i] = rc;
+      newCode += rc;
     } else {
       Serial.print("Occured wrong value: "); Serial.println(rc);
       return false;
     }
   }
-  memcpy(CODE, newCode, 8);
-  Serial.println(CODE);
+
+  if( newCode.length() != 8 ){
+    Serial.print("Wrong input length: ");Serial.print(newCode.length());
+    return false;
+  }
+
+  CODE = newCode;
+  Serial.print("New code: "); Serial.println(CODE);
   return true;
 }
 
-boolean initTimes(){
+void initTimes(){
   char newTimes[4] = "\0";
-  for(int i = 0; i < 3 && Serial.available() > 0; ++i){
+  for(byte i = 0; i < 3 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
@@ -194,15 +200,15 @@ boolean initTimes(){
       Serial.print("Occured wrong value: "); Serial.println(rc);
       return false;
     }
-  }  
+  }
   sscanf(newTimes, "%d", &TIMES);
   Serial.println(TIMES);
   return true;
 }
 
-boolean initDisp(){
+void initDisp(){
   char newTimes[5] = "\0";
-  for(int i = 0; i < 5 && Serial.available() > 0; ++i){
+  for(byte i = 0; i < 5 && Serial.available() > 0; ++i){
     char rc = Serial.read();
     if(rc >= '0' && rc <= '9'){
       newTimes[i] = rc;
@@ -217,22 +223,10 @@ boolean initDisp(){
 }
 
 boolean isAllowed(char value){
-  for(int i = 0 ; i < 16; ++i){
+  for(byte i = 0 ; i < 16; ++i){
     if(allowedChars[i] == value){
       return true;
     }
   }
   return false;
-}
-
-int pow2(int p){ 
-  if(p < 0){
-    return 0;
-  }
-  
-  int result = 1;
-  while (p-- > 0) {
-    result *= 2;
-  }
-  return result;
 }
