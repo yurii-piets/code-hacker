@@ -57,10 +57,8 @@ void doHack(){
       }
       
       module.setDisplayToString(display);
-      state = IN_PROGRESS;
-      handleClick(&state);
       
-      state = IN_PROGRESS;
+      handleClick(&state);
       readInput(&state);
 
       delay(DISP);
@@ -96,8 +94,8 @@ char* getRandomArray(){
 
 void handleClick(states *state){
   if (*state == IN_PROGRESS) {
-    byte keys = module.getButtons();
-    if (keys == 1) {
+    byte key = module.getButtons();
+    if (key == 1) {
       *state = WAITING;
     }
   }
@@ -106,11 +104,11 @@ void handleClick(states *state){
     case IN_PROGRESS:
       break;
     case WAITING:
-      Serial.println("in");
       for(byte key = 0; key != 1; key = module.getButtons()){
-        delay(200);
+        key = 0;
+        delay(100);
+        key = 0;
       }
-      Serial.println("out");
       *state = IN_PROGRESS;
       break;
     case FINISHED:
