@@ -3,7 +3,7 @@
 // Parametry programu
 char CODE[] = "3AE61Cb1";
 byte TIMES = 10;
-int DISP = 100;
+int DISP = 500;
 
 // Ustawienia pinów
 const byte strobe = 7;
@@ -52,10 +52,13 @@ void loop(){
       module.setDisplayToString(display);
 
       // Zmiany parametrów
-      handleClick(&state);
       readInput(&state);
+      long time = millis() + DISP; // Pobieraj info o przyciskach do tego czasu
+      while(time > millis()){
+        handleClick(&state);
+        delay(100);
+      }
 
-      delay(DISP);
       if(state == RESET){
         free(display);
         return;
@@ -67,18 +70,18 @@ void loop(){
   }
 
   free(display);
-
   // Zmiany parametrów po zakończeniu
   state = FINISHED;
   handleClick(&state);
   readInput(&state);
+
 }
 
 char* getRandomArray(){
   char *current = (char *) malloc(DISPLAY_SIZE+1);
-  int randomValue;
+  byte randomValue;
 
-  for(int i=0; i < DISPLAY_SIZE; ++i){
+  for(byte i=0; i < DISPLAY_SIZE; ++i){
     randomValue = random(0, 16);
     current[i] = allowedChars[randomValue];
   }
@@ -87,26 +90,26 @@ char* getRandomArray(){
 }
 
 void handleClick(states *state){
-  if (*state == IN_PROGRESS) {
-    byte key = module.getButtons();
-    if (key == 1) {
-      *state = WAITING;
-    }
-    waitTillRelease();
-  }
+  byte key;
 
   switch(*state){
     case IN_PROGRESS:
-      break;
+      key = module.getButtons();
+      if (key == 1) {
+        *state = WAITING;
+      }
+      else break;
+      waitTillRelease();
     case WAITING:
-      for(byte key = 0; key != 1; key = module.getButtons()){
+      for(key = 0; key != 1; key = module.getButtons()){
+        Serial.println(key);
         delay(100);
       }
       *state = IN_PROGRESS;
       waitTillRelease();
       break;
     case FINISHED:
-      for(byte key = 0; key != 2; key = module.getButtons()){
+      for(key = 0; key != 2; key = module.getButtons()){
         readInput(state);
         delay(100);
         if(*state == RESET){
