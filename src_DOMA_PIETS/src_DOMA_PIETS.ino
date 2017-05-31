@@ -19,7 +19,6 @@ TM1638 module(data, clock, strobe);
 typedef enum {IN_PROGRESS, WAITING, FINISHED, RESET} states;
 
 //Definicje funkcji
-char* getRandomArray();
 void handleClick(states *);
 void readInput(states *);
 boolean initCode();
@@ -35,7 +34,6 @@ void setup() {
 
 void loop(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
-  char *randomArray;
   byte leds = 0;
   module.setLEDs(leds);
   states state = IN_PROGRESS;
@@ -44,11 +42,10 @@ void loop(){
 
     for(byte j = 0; j < TIMES; ++j) {
 
-      randomArray = getRandomArray();
-      for(byte k = 0; k < DISPLAY_SIZE; ++k){
-          display[k] = ( k < i ? CODE[k] : randomArray[k] );
+      for(byte k = i; k < DISPLAY_SIZE; ++k){
+        // Niezdekodowana pozycja - przypadkowa wartość
+        display[k] = allowedChars[random(0, 16)];
       }
-      free(randomArray);
       module.setDisplayToString(display);
 
       // Zmiany parametrów
@@ -64,6 +61,7 @@ void loop(){
         return;
       }
     }
+    display[i] = CODE[i];
 
     leds = (leds << 1) +1; // leds*2 +1
     module.setLEDs(leds);
@@ -73,18 +71,6 @@ void loop(){
   // Zmiany parametrów po zakończeniu
   state = FINISHED;
   handleClick(&state);
-}
-
-char* getRandomArray(){
-  char *current = (char *) malloc(DISPLAY_SIZE+1);
-  byte randomValue;
-
-  for(byte i=0; i < DISPLAY_SIZE; ++i){
-    randomValue = random(0, 16);
-    current[i] = allowedChars[randomValue];
-  }
-
-  return current;
 }
 
 void handleClick(states *state){
@@ -121,36 +107,37 @@ void readInput(states *state){
   while(Serial.available() > 0){
     delay(100);
     char rc = Serial.read();
-    switch(rc){
-      case 'C': // zmiana kodu
-        Serial.println("C command");
-        if(Serial.available() > 0) {
-          if(initCode() != false){
-            *state = RESET;
-          }
-        } else {
-          Serial.println("Wrong format of command");
+    switch(rc)
+    {
+    case 'C': // zmiana kodu
+      Serial.println("C command");
+      if(Serial.available() > 0) {
+        if(initCode() != false){
+          *state = RESET;
         }
-        break;
-      case 'N': // zmiana ilości iteracji
-        Serial.println("N command");
-        if(Serial.available() > 0) {
-          initTimes();
-        } else {
-          Serial.println("Wrong format of command");
-        }
-        break;
-      case 'D': // zmiana czasu wyświetlania
-        Serial.println("D command");
-        if(Serial.available() > 0) {
-          initDisp();
-        } else {
-          Serial.println("Wrong format of command");
-        }
-        break;
-      default:
-        Serial.print("Wrong command: "); Serial.println(rc);
-        break;
+      } else {
+        Serial.println("Wrong format of command");
+      }
+      break;
+    case 'N': // zmiana ilości iteracji
+      Serial.println("N command");
+      if(Serial.available() > 0) {
+        initTimes();
+      } else {
+        Serial.println("Wrong format of command");
+      }
+      break;
+    case 'D': // zmiana czasu wyświetlania
+      Serial.println("D command");
+      if(Serial.available() > 0) {
+        initDisp();
+      } else {
+        Serial.println("Wrong format of command");
+      }
+      break;
+    default:
+      Serial.print("Wrong command: "); Serial.println(rc);
+      break;
     }
   }
 }
