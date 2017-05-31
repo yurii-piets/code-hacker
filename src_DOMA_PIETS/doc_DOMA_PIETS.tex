@@ -1,62 +1,146 @@
 \documentclass[a4paper,12pt]{article}
+%%%%% Pakiety
+%% Kodowanie dokumentu
 \usepackage{polski}
-\usepackage[cp1250]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+%% Opcje wyÅ›wietlania
 \usepackage{times}
 \usepackage{anysize}
-\usepackage{graphicx}
-\usepackage{hyperref}
 \usepackage{indentfirst}
+\usepackage{hyperref}
+%% Reszta narzÄ™dzi
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{listings}
 
-\title{Projekt z mikrokontrolerów - sprawozdanie}
+%%%%% Opcje dokumentu
+\title{Projekt z mikrokontrolerÃ³w - sprawozdanie}
 	
 \marginsize{2cm}{2cm}{2cm}{2cm}
 \sloppy
 
+%%%%% Opcje hiperÅ‚Ä…cza
+\hypersetup{
+	colorlinks,
+	linkcolor={red!50!black},
+	citecolor={blue!50!black},
+	urlcolor={blue!80!black}
+}
+
+%%%%% Do listingu kodu
+\lstdefinestyle{customc}{
+%%% KsztaÅ‚t caÅ‚oÅ›ci
+	belowcaptionskip=1\baselineskip,
+	breaklines=true,
+	frame=L,
+	xleftmargin=\parindent,
+	language=C,
+	showstringspaces=false,
+%%% Numery linii kodu
+	numberfirstline=true,
+	numbers=left,
+	stepnumber=5,    
+	firstnumber=1,
+%%% Formatowanie kolorÃ³w i czcionki
+	basicstyle=\footnotesize\ttfamily,
+	morekeywords = {boolean, byte, inline},
+	keywordstyle=\bfseries\color{green!40!black},
+	commentstyle=\itshape\color{purple!40!black},
+	identifierstyle=\color{blue},
+	stringstyle=\color{orange},
+%%% Polskie znaki
+	inputencoding=utf8x, 
+	extendedchars=\true,
+	literate={Ä…}{{\k{a}}}1
+				{Ä„}{{\k{A}}}1
+				{Ä™}{{\k{e}}}1
+				{Ä˜}{{\k{E}}}1
+				{Ã³}{{\'o}}1
+				{Ã“}{{\'O}}1
+				{Å›}{{\'s}}1
+				{Åš}{{\'S}}1
+				{Å‚}{{\l{}}}1
+				{Å}{{\L{}}}1
+				{Å¼}{{\.z}}1
+				{Å»}{{\.Z}}1
+				{Åº}{{\'z}}1
+				{Å¹}{{\'Z}}1
+				{Ä‡}{{\'c}}1
+				{Ä†}{{\'C}}1
+				{Å„}{{\'n}}1
+				{Åƒ}{{\'N}}1
+}
+
+\lstset{style=customc}
+
+%%%%%%%%%%%%%%%
 \begin{document}
-	
+
 \maketitle
 
-\section{Autorstwo}
-\par 1. Temat: £amanie kodu\\ 
-\par 2. Numer grupy: 1b\\
-\par 3. Sk³ad osobowy: Sebastian Domarecki, Yurii Piets\\
-\par 4. Kierunek: informatyka\\
-Rok studiów: II\\
-Rok akademicki: 2016-2017\\
+%%%%%%%%%%%%%%%
+\section{Informacje ogÃ³lne}
+\par 1. Temat: Åamanie kodu 
+\par 2. Numer grupy: 1b
+\par 3. Sklad osobowy: Sebastian Domarecki, Yurii Piets
+\par 4. Kierunek: informatyka
+\par 5. Rok studiÃ³w: II
+\par 6. Rok akademicki: 2016-2017
 
-\section{Opis dzia³ania}
+%%%%%%%%%%%%%%%
+\section{Opis dziaÅ‚ania}
+%%%
+\subsection{Schemat poÅ‚Ä…czenia}
 
-\subsection{Schemat po\l{}\k{a}czenia}
-
-\begin{figure}[ht]
-	\centerline{\includegraphics[scale=0.5]{Mikro_bb.png}}
+\begin{figure}[!ht]
+	
+	\centering
+	\includegraphics[scale=0.5]{Mikro_bb.png}
+	\qquad
+	\begin{tabular}[b]{cc}\hline
+		TM1638 & Arduino \\ \hline
+		VCC & 5V \\
+		GND & GND \\
+		STB & Digital 7 \\
+		CLK & Digital 9 \\
+		DIO & Digital 8 \\ \hline
+	\end{tabular}
 	\label{fig:schemat}
 \end{figure}
-
+%%%
 \subsection{Opis algorytmu}
-Schemat dzia³ania algorytmu opiera siê w g³ównej mierze na zredukowanej zewnêtrznej bibliotece TM1638.h udostêpnianej na \href{https://github.com/rjbatista/tm1638-library}{Githubie}. \\
-Program po inicjalizacji ekranu stringiem "00000000", nastêpnie a¿ do zakoñczenia ³amania kodu znajduje siê w pêtli iterowanej po numerze dekodowanej cyfry.\\
-Wewn¹trz niej kolejna pêtla for TIMES razy zmienia wyœwietlane wartoœci niezdekodowanych cyfr na kolejne dozwolone.\\
-Za ka¿d¹ iteracj¹ drugiej pêtli sprawdzane jest czy zosta³ wciœniêty przycisk, b¹dŸ wprowadzona komenda przez port szeregowy.\\
-Po jej opuszczeniu w³¹czany jest kolejny led oraz kopiowana wartoœæ zdekodowanej cyfry z CODE do tablicy display do wyœwietlenia.
-
+Schemat dziaÅ‚ania algorytmu opiera siÄ™ w gÅ‚Ã³wnej mierze na zredukowanej zewnÄ™trznej bibliotece TM1638.h udostÄ™pnianej na \href{https://github.com/rjbatista/tm1638-library}{Githubie}. \\
+Program po inicjalizacji ekranu stringiem "00000000", nastÄ™pnie aÅ¼ do zakoÅ„czenia Å‚amania kodu znajduje siÄ™ w pÄ™tli iterowanej po numerze dekodowanej cyfry.\\
+WewnÄ…trz niej kolejna pÄ™tla for TIMES razy zmienia wyÅ›wietlane wartoÅ›ci niezdekodowanych cyfr na wygenerowane przypadowe dozwolone.\\
+Za kaÅ¼dÄ… iteracjÄ… drugiej pÄ™tli sprawdzane jest czy zostaÅ‚ wciÅ›niÄ™ty przycisk, bÄ…dÅº wprowadzona komenda przez port szeregowy.\\
+Po jej opuszczeniu wÅ‚Ä…czany jest kolejny led oraz kopiowana wartoÅ›Ä‡ zdekodowanej cyfry z CODE do tablicy display do wyÅ›wietlenia.
+%%%
 \subsection{Elementy programu}
 
 \subsubsection{Zmienne}
 \par CODE,TIMES,DISP - zgodnie z wytycznymi.
-\par module - obiekt klasy TM1638 udostêpniaj¹cy prosty interfejs do obs³ugi p³ytki
-\par state - zmienna typu wyliczeniowego wyœwietlaj¹ca stan programu - dostêpne IN\_PROGRESS, WAITING, FINISHED, RESET
-\subsubsection{Sta³e}
-\par strobe,clock,data - piny Arduino ³¹cz¹ce siê z p³ytk¹ TM1638
+\par module - obiekt klasy TM1638 udostÄ™pniajÄ…cy prosty interfejs do obsÅ‚ugi pÅ‚ytki
+\par state - zmienna typu wyliczeniowego wyÅ›wietlajÄ…ca stan programu - dostÄ™pne IN\_PROGRESS, WAITING, FINISHED, RESET
+\subsubsection{StaÅ‚e}
+\par strobe,clock,data - piny Arduino Å‚Ä…czÄ…ce siÄ™ z pÅ‚ytkÄ… TM1638
+\par DISPLAY\_SIZE - wielkoÅ›Ä‡ wyÅ›wietlacza pÅ‚ytki
+\par allowed\_chars - tablica zawierajÄ…ca dozwolone do wyÅ›wietlenia znaki, wszystkie inne sÄ… odrzucone
 \subsubsection{Funkcje}
-\par void handleClick(states *) - obs³uga przycisków
-\par void readInput(states *) - obs³uga poleceñ z ³¹cza szeregowego
-\par boolean initCode() , initTimes(), initDisp() - wywo³ywane przy readInput dla pierwszego przes³anego znaku odpowiednio C, N lub D, sczytuj¹ z ³¹cza szeregowego now¹ wartoœæ parametru pracy programu
-\par boolean isAllowed(char) - pomocnicza funkcja sprawdzaj¹ca czy argument jest dozwolonym znakiem
+\par void handleClick(states *) - obsÅ‚uga przyciskÃ³w
+\par void readInput(states *) - obsÅ‚uga poleceÅ„ z Å‚Ä…cza szeregowego
+\par boolean initCode() , initTimes(), initDisp() - wywoÅ‚ywane przy readInput dla pierwszego przesÅ‚anego znaku odpowiednio C, N lub D, sczytujÄ… z Å‚Ä…cza szeregowego nowÄ… wartoÅ›Ä‡ parametru pracy programu
+\par boolean isAllowed(char) - pomocnicza funkcja sprawdzajÄ…ca czy argument jest dozwolonym znakiem
+\par inline void waitTillRelease() - pomocnicza funkcja czekajÄ…ca na zwolnienie wszystkich przyciskÃ³w
 
+%%%
 \subsection{Biblioteki}
-TM1638.h
+Autorsko zredukowana wersja TM1638.h udostÄ™pniana na licencji GNU GPL v3 przez Ricardo Batista.\\
+Link: \href{https://github.com/rjbatista/tm1638-library}{https://github.com/rjbatista/tm1638-library}
+
+%%%%%%%%%%%%%%%
 \section{Listing kodu}
-	
+\lstinputlisting{src_DOMA_PIETS.ino}
+
+%%%%%%%%%%%%%%%
 \end{document}
