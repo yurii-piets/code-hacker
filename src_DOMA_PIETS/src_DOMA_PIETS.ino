@@ -3,7 +3,7 @@
 // Parametry programu
 char CODE[] = "3AE61Cb1";
 byte TIMES = 10;
-int DISP = 500;
+int DISP = 100;
 
 // Ustawienia pinów
 const byte strobe = 7;
@@ -54,10 +54,10 @@ void loop(){
       // Zmiany parametrów
       readInput(&state);
       long time = millis() + DISP; // Pobieraj info o przyciskach do tego czasu
-      while(time > millis()){
+      do
+      {
         handleClick(&state);
-        delay(100);
-      }
+      } while (time > millis());
 
       if(state == RESET){
         free(display);
@@ -68,13 +68,11 @@ void loop(){
     leds = (leds << 1) +1; // leds*2 +1
     module.setLEDs(leds);
   }
-
   free(display);
+  module.setDisplayToString(CODE); // Wynik łamania kodu
   // Zmiany parametrów po zakończeniu
   state = FINISHED;
   handleClick(&state);
-  readInput(&state);
-
 }
 
 char* getRandomArray(){
@@ -102,7 +100,6 @@ void handleClick(states *state){
       waitTillRelease();
     case WAITING:
       for(key = 0; key != 1; key = module.getButtons()){
-        Serial.println(key);
         delay(100);
       }
       *state = IN_PROGRESS;
