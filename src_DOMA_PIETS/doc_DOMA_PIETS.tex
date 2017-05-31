@@ -110,11 +110,14 @@
 \end{figure}
 %%%
 \subsection{Opis algorytmu}
-Schemat działania algorytmu opiera się w głównej mierze na zredukowanej zewnętrznej bibliotece TM1638.h udostępnianej na \href{https://github.com/rjbatista/tm1638-library}{Githubie}. \\
-Program po inicjalizacji ekranu stringiem "00000000", następnie aż do zakończenia łamania kodu znajduje się w pętli iterowanej po numerze dekodowanej cyfry.\\
+\par Schemat działania algorytmu opiera się w głównej mierze na zredukowanej zewnętrznej bibliotece TM1638.h udostępnianej na \href{https://github.com/rjbatista/tm1638-library}{Githubie}.
+\par Program po inicjalizacji ekranu stringiem ośmiu spacji, aż do zakończenia łamania kodu znajduje się w pętli iterowanej po numerze dekodowanej cyfry.\\
 Wewnątrz niej kolejna pętla for TIMES razy zmienia wyświetlane wartości niezdekodowanych cyfr na wygenerowane przypadowe dozwolone.\\
-Za każdą iteracją drugiej pętli sprawdzane jest czy został wciśnięty przycisk, bądź wprowadzona komenda przez port szeregowy.\\
+Za każdą iteracją drugiej pętli sprawdzane jest w sposób ciągły przez DISP czasu czy został wciśnięty przycisk, bądź wprowadzona komenda przez port szeregowy.\\
 Po jej opuszczeniu włączany jest kolejny led oraz kopiowana wartość zdekodowanej cyfry z CODE do tablicy display do wyświetlenia.
+\par HandleClick w zależności od stanu programu pozwala na jego zmianę po wykryciu sygnału z odpowiedniego przycisku.
+Następnie program czeka na zwolnienie wszystkich przycisków.
+\par ReadInput najpierw czeka na zapełnienie buforu, następnie wykrywa rodzaj komendy i przekierowuje ruch do odpowiedniej funkcji. Dla błędnego polecenia wypisywany jest stosowny komunikat.
 %%%
 \subsection{Elementy programu}
 
@@ -134,7 +137,7 @@ Po jej opuszczeniu włączany jest kolejny led oraz kopiowana wartość zdekodow
 \par inline void waitTillRelease() - pomocnicza funkcja czekająca na zwolnienie wszystkich przycisków
 
 %%%
-\subsection{Biblioteki}
+\subsection{Używane biblioteki}
 Autorsko zredukowana wersja TM1638.h udostępniana na licencji GNU GPL v3 przez Ricardo Batista.\\
 Link: \href{https://github.com/rjbatista/tm1638-library}{https://github.com/rjbatista/tm1638-library}
 
