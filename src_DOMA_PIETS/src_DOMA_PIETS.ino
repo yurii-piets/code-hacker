@@ -19,6 +19,7 @@ TM1638 module(data, clock, strobe);
 typedef enum {IN_PROGRESS, WAITING, FINISHED, RESET} states;
 
 //Definicje funkcji
+void doHack();
 void handleClick(states *);
 void readInput(states *);
 boolean initCode();
@@ -33,6 +34,10 @@ void setup() {
 }
 
 void loop(){
+  doHack();
+}
+
+void doHack(){
   char *display = (char *) malloc(DISPLAY_SIZE + 1);
   byte leds = 0;
   module.setLEDs(leds);
@@ -103,6 +108,7 @@ void handleClick(states *state){
   }
 }
 
+//funkcja do wsczytania wejscia z Serial
 void readInput(states *state){
   while(Serial.available() > 0){
     delay(100);
@@ -142,6 +148,7 @@ void readInput(states *state){
   }
 }
 
+//inicjalizacja wcztanego codu
 boolean initCode(){
   char newCode[DISPLAY_SIZE+1] = "\0";
   char rc;
@@ -202,6 +209,7 @@ boolean isAllowed(char value){
   return false;
 }
 
+//funkcja do odczekanie wyzerowania wcisnietych klawiszy
 inline void waitTillRelease() {
   while(module.getButtons() != 0) delay(20);
 }
